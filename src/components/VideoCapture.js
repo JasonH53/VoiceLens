@@ -3,8 +3,7 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 import './VideoCapture.css';
 
-function VideoCapture({ videoRef, onTranscription, onProcessingStart }) {
-  const [isRecording, setIsRecording] = useState(false);
+function VideoCapture({ videoRef, onTranscription, onStartRecording, onStopRecording, isRecording }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
@@ -61,20 +60,19 @@ function VideoCapture({ videoRef, onTranscription, onProcessingStart }) {
   const handleStartStop = async () => {
     if (isRecording) {
       mediaRecorderRef.current.stop();
-      setIsRecording(false);
+      onStopRecording();
       stopCamera();
-      onProcessingStart();
+      setIsProcessing(true);
     } else {
       const stream = await startCamera();
       if (stream) {
         mediaRecorderRef.current.start();
-        setIsRecording(true);
+        onStartRecording();
       }
     }
   };
 
   const processVideo = async (webmBlob) => {
-    setIsProcessing(true);
     try {
       const mp4Blob = await convertToMp4(webmBlob);
       const transcription = await transcribeVideo(mp4Blob);
@@ -140,7 +138,6 @@ function VideoCapture({ videoRef, onTranscription, onProcessingStart }) {
       >
         {isRecording ? 'Stop Recording' : 'Start Recording'}
       </button>
-      {isProcessing && <p className="processing-message">Processing video...</p>}
     </div>
   );
 }

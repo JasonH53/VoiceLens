@@ -2,16 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import VideoCapture from './components/VideoCapture';
 import TranscriptionDisplay from './components/TranscriptionDisplay';
 import LanguageSelector from './components/LanguageSelector';
-import TextToSpeech from './components/TextToSpeech';
-import EmotionDisplay from './components/EmotionDisplay';
 import './App.css';
 
 function App() {
   const [transcription, setTranscription] = useState('');
   const [translatedText, setTranslatedText] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
-  const [emotion, setEmotion] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const videoRef = useRef(null);
   const speechSynthesisRef = useRef(null);
 
@@ -25,12 +23,8 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Here you would call your translation API when the transcription changes
-    // For demonstration, we're just setting it to the same text
-    setTranslatedText(transcription);
-    
-    // Automatically speak the translated text
     if (transcription) {
+      setTranslatedText(transcription);
       speakText(transcription);
     }
   }, [transcription]);
@@ -38,22 +32,31 @@ function App() {
   const handleTranscription = async (transcriptionResult) => {
     setTranscription(transcriptionResult);
     setIsProcessing(false);
-    
-    // You would also call your emotion detection API here
-    setEmotion("Neutral");
   };
 
   const speakText = (text) => {
     if (speechSynthesisRef.current) {
-      speechSynthesisRef.current.cancel(); // Cancel any ongoing speech
+      speechSynthesisRef.current.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = selectedLanguage; // Set the language for speech
+      utterance.lang = selectedLanguage;
       speechSynthesisRef.current.speak(utterance);
     }
   };
 
   const handleRepeat = () => {
     speakText(translatedText);
+  };
+
+  const handleStartRecording = () => {
+    setIsRecording(true);
+    setTranscription('');
+    setTranslatedText('');
+    setIsProcessing(false);
+  };
+
+  const handleStopRecording = () => {
+    setIsRecording(false);
+    setIsProcessing(true);
   };
 
   return (
@@ -69,37 +72,38 @@ function App() {
             <VideoCapture 
               videoRef={videoRef} 
               onTranscription={handleTranscription} 
-              onProcessingStart={() => setIsProcessing(true)}
+              onStartRecording={handleStartRecording}
+              onStopRecording={handleStopRecording}
+              isRecording={isRecording}
             />
           </div>
 
-          {isProcessing ? (
+          {isProcessing && (
             <div className="processing-message">
               <p>Processing your video...</p>
               <div className="loader"></div>
             </div>
-          ) : (
-            transcription && (
-              <div className="result-section">
-                <div className="transcription-box">
-                  <h2>Original Transcription</h2>
-                  <TranscriptionDisplay text={transcription} />
-                  <EmotionDisplay emotion={emotion} />
-                </div>
+          )}
 
-                <div className="translation-box">
-                  <h2>Translation</h2>
-                  <LanguageSelector 
-                    selectedLanguage={selectedLanguage} 
-                    onLanguageChange={setSelectedLanguage} 
-                  />
-                  <TranscriptionDisplay text={translatedText} />
-                  <button onClick={handleRepeat} disabled={!translatedText}>
-                    Repeat
-                  </button>
-                </div>
+          {!isRecording && !isProcessing && transcription && (
+            <div className="result-section">
+              <div className="transcription-box">
+                <h2>Original Transcription</h2>
+                <TranscriptionDisplay text={transcription} />
               </div>
-            )
+
+              <div className="translation-box">
+                <h2>Translation</h2>
+                <LanguageSelector 
+                  selectedLanguage={selectedLanguage} 
+                  onLanguageChange={setSelectedLanguage} 
+                />
+                <TranscriptionDisplay text={translatedText} />
+                <button onClick={handleRepeat} disabled={!translatedText}>
+                  Repeat
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </main>
