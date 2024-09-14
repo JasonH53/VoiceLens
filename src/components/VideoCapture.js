@@ -1,59 +1,89 @@
-// components/VideoCapture.js
 import React, { useState, useEffect, useRef } from 'react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import { fetchFile } from '@ffmpeg/util';
+import './VideoCapture.css';
 
 function VideoCapture({ videoRef, onTranscription }) {
   const [isRecording, setIsRecording] = useState(false);
-  const [isConverting, setIsConverting] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const mediaRecorderRef = useRef(null);
+  const streamRef = useRef(null);
   const chunksRef = useRef([]);
   const ffmpegRef = useRef(new FFmpeg());
 
   useEffect(() => {
-    if (videoRef.current) {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then(stream => {
-          videoRef.current.srcObject = stream;
-          
-          const options = { mimeType: 'video/webm' };
-          
-          if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-            console.error(`${options.mimeType} is not supported`);
-            return;
-          }
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
 
-          mediaRecorderRef.current = new MediaRecorder(stream, options);
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      videoRef.current.srcObject = stream;
+      streamRef.current = stream;
+      
+      const options = { mimeType: 'video/webm' };
+      
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        console.error(`${options.mimeType} is not supported`);
+        return;
+      }
 
-          mediaRecorderRef.current.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-              chunksRef.current.push(event.data);
-            }
-          };
+      mediaRecorderRef.current = new MediaRecorder(stream, options);
 
-          mediaRecorderRef.current.onstop = () => {
-            const blob = new Blob(chunksRef.current, { type: 'video/webm' });
-            chunksRef.current = [];
-            convertToMp4AndSave(blob);
-            onTranscription(blob);
-          };
-        })
-        .catch(err => console.error("Error accessing the webcam:", err));
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+        chunksRef.current = [];
+        await processVideo(blob);
+      };
+    } catch (err) {
+      console.error("Error accessing the webcam:", err);
     }
-  }, [videoRef, onTranscription]);
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  };
 
   const handleStartStop = () => {
     if (isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      stopCamera();
     } else {
-      mediaRecorderRef.current.start();
-      setIsRecording(true);
+      startCamera().then(() => {
+        mediaRecorderRef.current.start();
+        setIsRecording(true);
+      });
     }
   };
 
-  const convertToMp4AndSave = async (webmBlob) => {
-    setIsConverting(true);
+  const processVideo = async (webmBlob) => {
+    setIsProcessing(true);
+    try {
+      const mp4Blob = await convertToMp4(webmBlob);
+      const transcription = await transcribeVideo(mp4Blob);
+      onTranscription(transcription);
+    } catch (error) {
+      console.error('Error processing video:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const convertToMp4 = async (webmBlob) => {
     try {
       const ffmpeg = ffmpegRef.current;
       if (!ffmpeg.loaded) {
@@ -68,30 +98,46 @@ function VideoCapture({ videoRef, onTranscription }) {
       await ffmpeg.exec(['-i', inputFileName, '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac', outputFileName]);
 
       const data = await ffmpeg.readFile(outputFileName);
-      const mp4Blob = new Blob([data.buffer], { type: 'video/mp4' });
-
-      const url = URL.createObjectURL(mp4Blob);
-      const a = document.createElement('a');
-      document.body.appendChild(a);
-      a.style = 'display: none';
-      a.href = url;
-      a.download = 'recorded-video.mp4';
-      a.click();
-      window.URL.revokeObjectURL(url);
+      return new Blob([data.buffer], { type: 'video/mp4' });
     } catch (error) {
       console.error('Error converting video:', error);
-    } finally {
-      setIsConverting(false);
+      throw error;
+    }
+  };
+
+  const transcribeVideo = async (mp4Blob) => {
+    const formData = new FormData();
+    formData.append("video", mp4Blob, "input.mp4");
+
+    try {
+      const response = await fetch("https://symphoniclabs--symphonet-vsr-modal-htn-model-upload-static-htn.modal.run", {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.text();
+      return result;
+    } catch (error) {
+      console.error('Error transcribing video:', error);
+      throw error;
     }
   };
 
   return (
-    <div>
-      <video ref={videoRef} autoPlay muted />
-      <button onClick={handleStartStop} disabled={isConverting}>
+    <div className="video-capture">
+      <video ref={videoRef} autoPlay muted className="webcam-video" />
+      <button 
+        onClick={handleStartStop} 
+        disabled={isProcessing}
+        className={`record-button ${isRecording ? 'recording' : ''}`}
+      >
         {isRecording ? 'Stop Recording' : 'Start Recording'}
       </button>
-      {isConverting && <p>Converting video to MP4...</p>}
+      {isProcessing && <p className="processing-message">Processing video...</p>}
     </div>
   );
 }

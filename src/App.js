@@ -20,25 +20,18 @@ function App() {
     setTranslatedText(transcription);
   }, [transcription]);
 
-  const handleTranscription = async (videoBlob) => {
-    setIsProcessing(true);
+
+  const handleTranscription = async (transcription) => {
+    setTranscription(transcription);
     
-    // Simulating API calls with setTimeout
-    setTimeout(() => {
-      // Here you would call the Symphonic Labs API to get the transcription
-      setTranscription("This is a placeholder transcription.");
-      
-      // You would also call your emotion detection API here
-      setEmotion("Neutral");
-      
-      setIsProcessing(false);
-    }, 2000); // Simulating a 2-second process
+    // You would also call your emotion detection API here
+    setEmotion("Neutral");
   };
 
   return (
     <div className="App">
       <header>
-        <h1>LipSync AI</h1>
+        <h1>VoiceLens</h1>
         <p>Transcribe, Translate, and Emote in Real-Time</p>
       </header>
 

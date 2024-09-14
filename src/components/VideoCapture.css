@@ -1,0 +1,62 @@
+.video-capture {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.webcam-video {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.record-button {
+  padding: 12px 24px;
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  background-color: #3498db;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.record-button:hover {
+  background-color: #2980b9;
+}
+
+.record-button:active {
+  transform: scale(0.98);
+}
+
+.record-button.recording {
+  background-color: #e74c3c;
+  animation: pulse 1.5s infinite;
+}
+
+.record-button:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.converting-message {
+  margin-top: 10px;
+  font-style: italic;
+  color: #7f8c8d;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(231, 76, 60, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+  }
+}
