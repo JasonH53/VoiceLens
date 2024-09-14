@@ -13,9 +13,7 @@ function VideoCapture({ videoRef, onTranscription }) {
 
   useEffect(() => {
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
+      stopCamera();
     };
   }, []);
 
@@ -45,6 +43,8 @@ function VideoCapture({ videoRef, onTranscription }) {
         chunksRef.current = [];
         await processVideo(blob);
       };
+
+      return stream;
     } catch (err) {
       console.error("Error accessing the webcam:", err);
     }
@@ -53,20 +53,22 @@ function VideoCapture({ videoRef, onTranscription }) {
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
       videoRef.current.srcObject = null;
     }
   };
 
-  const handleStartStop = () => {
+  const handleStartStop = async () => {
     if (isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       stopCamera();
     } else {
-      startCamera().then(() => {
+      const stream = await startCamera();
+      if (stream) {
         mediaRecorderRef.current.start();
         setIsRecording(true);
-      });
+      }
     }
   };
 
