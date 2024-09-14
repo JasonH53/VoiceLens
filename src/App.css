@@ -1,29 +1,96 @@
 .App {
+  font-family: 'Roboto', sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+h1 {
+  color: #2c3e50;
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+header p {
+  color: #7f8c8d;
+  font-size: 1.2rem;
+}
+
+.content-area {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.video-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  margin-bottom: 20px;
+}
+
+.processing-message {
   text-align: center;
   padding: 20px;
 }
 
-video {
-  width: 100%;
-  max-width: 640px;
-  height: auto;
+.loader {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
 }
 
-.transcription, .emotion {
-  margin-top: 20px;
-  padding: 10px;
-  border: 1px solid #ccc;
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.result-section {
+  display: flex;
+  justify-content: space-between;
+}
+
+.transcription-box, .translation-box {
+  flex: 1;
+  margin: 0 10px;
+  padding: 20px;
+  background-color: #f9f9f9;
   border-radius: 5px;
 }
 
-button {
-  margin: 10px;
-  padding: 10px 20px;
-  font-size: 16px;
+h2 {
+  color: #2c3e50;
+  margin-bottom: 15px;
 }
 
-select {
-  margin: 10px;
-  padding: 5px;
-  font-size: 16px;
+footer {
+  margin-top: auto;
+  text-align: center;
+  padding: 20px 0;
+  color: #7f8c8d;
+}
+
+@media (max-width: 768px) {
+  .result-section {
+    flex-direction: column;
+  }
+
+  .transcription-box, .translation-box {
+    margin: 10px 0;
+  }
 }

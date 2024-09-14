@@ -11,6 +11,7 @@ function App() {
   const [translatedText, setTranslatedText] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [emotion, setEmotion] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -20,26 +21,65 @@ function App() {
   }, [transcription]);
 
   const handleTranscription = async (videoBlob) => {
-    // Here you would call the Symphonic Labs API to get the transcription
-    // For demonstration, we're just setting a placeholder text
-    setTranscription("This is a placeholder transcription.");
+    setIsProcessing(true);
     
-    // You would also call your emotion detection API here
-    setEmotion("Neutral");
+    // Simulating API calls with setTimeout
+    setTimeout(() => {
+      // Here you would call the Symphonic Labs API to get the transcription
+      setTranscription("This is a placeholder transcription.");
+      
+      // You would also call your emotion detection API here
+      setEmotion("Neutral");
+      
+      setIsProcessing(false);
+    }, 2000); // Simulating a 2-second process
   };
 
   return (
     <div className="App">
-      <h1>LipSync AI</h1>
-      <VideoCapture videoRef={videoRef} onTranscription={handleTranscription} />
-      <TranscriptionDisplay text={transcription} />
-      <LanguageSelector 
-        selectedLanguage={selectedLanguage} 
-        onLanguageChange={setSelectedLanguage} 
-      />
-      <TranscriptionDisplay text={translatedText} />
-      <TextToSpeech text={translatedText} />
-      <EmotionDisplay emotion={emotion} />
+      <header>
+        <h1>LipSync AI</h1>
+        <p>Transcribe, Translate, and Emote in Real-Time</p>
+      </header>
+
+      <main>
+        <div className="content-area">
+          <div className="video-section">
+            <VideoCapture videoRef={videoRef} onTranscription={handleTranscription} />
+          </div>
+
+          {isProcessing ? (
+            <div className="processing-message">
+              <p>Processing your video...</p>
+              <div className="loader"></div>
+            </div>
+          ) : (
+            transcription && (
+              <div className="result-section">
+                <div className="transcription-box">
+                  <h2>Original Transcription</h2>
+                  <TranscriptionDisplay text={transcription} />
+                  <EmotionDisplay emotion={emotion} />
+                </div>
+
+                <div className="translation-box">
+                  <h2>Translation</h2>
+                  <LanguageSelector 
+                    selectedLanguage={selectedLanguage} 
+                    onLanguageChange={setSelectedLanguage} 
+                  />
+                  <TranscriptionDisplay text={translatedText} />
+                  <TextToSpeech text={translatedText} />
+                </div>
+              </div>
+            )
+          )}
+        </div>
+      </main>
+
+      <footer>
+        <p>Created for Hack The North 2024 - VoiceLens</p>
+      </footer>
     </div>
   );
 }
