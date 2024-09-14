@@ -13,19 +13,47 @@ function App() {
   const [emotion, setEmotion] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const videoRef = useRef(null);
+  const speechSynthesisRef = useRef(null);
+
+  useEffect(() => {
+    speechSynthesisRef.current = window.speechSynthesis;
+    return () => {
+      if (speechSynthesisRef.current) {
+        speechSynthesisRef.current.cancel();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // Here you would call your translation API when the transcription changes
     // For demonstration, we're just setting it to the same text
     setTranslatedText(transcription);
+    
+    // Automatically speak the translated text
+    if (transcription) {
+      speakText(transcription);
+    }
   }, [transcription]);
 
-
-  const handleTranscription = async (transcription) => {
-    setTranscription(transcription);
+  const handleTranscription = async (transcriptionResult) => {
+    setTranscription(transcriptionResult);
+    setIsProcessing(false);
     
     // You would also call your emotion detection API here
     setEmotion("Neutral");
+  };
+
+  const speakText = (text) => {
+    if (speechSynthesisRef.current) {
+      speechSynthesisRef.current.cancel(); // Cancel any ongoing speech
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = selectedLanguage; // Set the language for speech
+      speechSynthesisRef.current.speak(utterance);
+    }
+  };
+
+  const handleRepeat = () => {
+    speakText(translatedText);
   };
 
   return (
@@ -38,7 +66,11 @@ function App() {
       <main>
         <div className="content-area">
           <div className="video-section">
-            <VideoCapture videoRef={videoRef} onTranscription={handleTranscription} />
+            <VideoCapture 
+              videoRef={videoRef} 
+              onTranscription={handleTranscription} 
+              onProcessingStart={() => setIsProcessing(true)}
+            />
           </div>
 
           {isProcessing ? (
@@ -62,7 +94,9 @@ function App() {
                     onLanguageChange={setSelectedLanguage} 
                   />
                   <TranscriptionDisplay text={translatedText} />
-                  <TextToSpeech text={translatedText} />
+                  <button onClick={handleRepeat} disabled={!translatedText}>
+                    Repeat
+                  </button>
                 </div>
               </div>
             )

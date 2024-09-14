@@ -3,7 +3,7 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 import './VideoCapture.css';
 
-function VideoCapture({ videoRef, onTranscription }) {
+function VideoCapture({ videoRef, onTranscription, onProcessingStart }) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const mediaRecorderRef = useRef(null);
@@ -63,6 +63,7 @@ function VideoCapture({ videoRef, onTranscription }) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       stopCamera();
+      onProcessingStart();
     } else {
       const stream = await startCamera();
       if (stream) {
