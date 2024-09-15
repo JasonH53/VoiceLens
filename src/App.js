@@ -3,6 +3,9 @@ import VideoCapture from './components/VideoCapture';
 import TranscriptionDisplay from './components/TranscriptionDisplay';
 import LanguageSelector from './components/LanguageSelector';
 import './App.css';
+import Groq from "groq-sdk";
+
+const groq = new Groq({ apiKey: process.env.REACT_APP_GROQ_API_KEY, dangerouslyAllowBrowser: true });
 
 function App() {
   const [transcription, setTranscription] = useState('');
@@ -12,6 +15,30 @@ function App() {
   const [isRecording, setIsRecording] = useState(false);
   const videoRef = useRef(null);
   const speechSynthesisRef = useRef(null);
+
+  async function onLanguageChange(lang) {
+    setSelectedLanguage(lang);
+    console.log(lang);
+    if (lang == "en") {
+      setTranslatedText(transcription);
+      return;
+    }
+    await groq.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: `Translate the following English text to ${lang}: ${transcription}. Respond only with the translated text without quotation marks`,
+        },
+      ],
+      model: "llama3-8b-8192",
+    }).then(chatCompletion => {
+      console.log(transcription);
+      const out = chatCompletion.choices[0]?.message?.content || "";
+      console.log(out)
+      setTranslatedText(out);
+    });
+
+  }
 
   useEffect(() => {
     speechSynthesisRef.current = window.speechSynthesis;
