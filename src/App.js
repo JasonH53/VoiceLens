@@ -123,7 +123,7 @@ function App() {
                 <h2>Translation</h2>
                 <LanguageSelector 
                   selectedLanguage={selectedLanguage} 
-                  onLanguageChange={setSelectedLanguage} 
+                  onLanguageChange={onLanguageChange} 
                 />
                 <TranscriptionDisplay text={translatedText} />
                 <button onClick={handleRepeat} disabled={!translatedText}>
