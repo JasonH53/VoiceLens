@@ -90,7 +90,7 @@ function App() {
     <div className="App">
       <header>
         <h1>VoiceLens</h1>
-        <p>Transcribe, Translate, and Emote in Real-Time</p>
+        <p>Transcribe, Translate Real-Time. Empower silent voices with real-time lip reading and translation. Speak and connect globally.</p>
       </header>
 
       <main>
