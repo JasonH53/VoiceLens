@@ -5,6 +5,8 @@ function LanguageSelector({ selectedLanguage, onLanguageChange }) {
     { code: 'en', name: 'English' },
     { code: 'es', name: 'Spanish' },
     { code: 'fr', name: 'French' },
+    { code: 'cn', name: 'Chinese' },
+    { code: 'ar', name: 'Arabic' },
     // Add more languages as needed
   ];
 
